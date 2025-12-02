@@ -1,33 +1,54 @@
 #include "simulation.hpp"
+#include <iostream>
+#include <cmath>
 
-using namespace std;
+void run_sequential(std::vector<std::vector<double>>& grid)
+{
+    const int N = GRID_SIZE;
+    const int cx = N / 2;
+    const int cy = N / 2;
 
-void run_sequential(vector<vector<float>>& grid) {
-    cout << "[Sequential] Running...\n";
+    const int SIM_TIME = 100;
 
-    int cx = N / 2;
-    int cy = N / 2;
+    std::cout << "[SEQ] Starting sequential simulation...\n";
 
-    auto start = chrono::high_resolution_clock::now();
+    for (int t = 0; t <= SIM_TIME; t++)
+    {
+        double Rmax = SOUND_SPEED * t;
+        double Rmax_cell = Rmax / CELL_SIZE;
 
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
+        int imin = std::max(0, cx - (int)Rmax_cell);
+        int imax = std::min(N - 1, cx + (int)Rmax_cell);
 
-            float dx = (i - cx) * CELL_SIZE;
-            float dy = (j - cy) * CELL_SIZE;
-            float R = sqrtf(dx * dx + dy * dy);
+        for (int i = imin; i <= imax; i++)
+        {
+            
+            double dx_cell = (i - cx);
+            double dy_max_cell = std::sqrt(Rmax_cell * Rmax_cell - dx_cell * dx_cell);
+            
+            int jmin = std::max(0, (int)(cy - dy_max_cell));
+            int jmax = std::min(N - 1, (int)(cy + dy_max_cell));
+            
+            for (int j = jmin; j <= jmax; j++)
+            {
+                if (grid[i][j] > 0.0)
+                continue;
+                
+                double dx = (i - cx) * CELL_SIZE;
+                double dy = (j - cy) * CELL_SIZE;
+                
+                double R = std::sqrt(dx * dx + dy * dy);
 
-            float t_arrive = R / SOUND_SPEED;
+                double arrival_time = R / SOUND_SPEED;
 
-            if (t_arrive <= SIM_TIME) {
-                grid[i][j] = compute_overpressure(R);
+                if (arrival_time <= t)
+                    grid[i][j] = compute_overpressure(R);
             }
         }
+
+        // if (t % 10 == 0)
+        //     std::cout << "[SEQ] t = " << t << "/100\n";
     }
 
-    auto end = chrono::high_resolution_clock::now();
-    float sec =
-        chrono::duration_cast<chrono::milliseconds>(end - start).count() / 1000.0f;
-
-    cout << "[Sequential] Done in " << sec << " seconds.\n";
+    std::cout << "[SEQ] Simulation complete.\n";
 }

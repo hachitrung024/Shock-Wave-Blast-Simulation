@@ -1,56 +1,48 @@
 #include <iostream>
+#include <chrono>
+#include <vector>
 #include <fstream>
 #include <iomanip>
 #include "simulation.hpp"
-#include "utils.hpp"
 
-using namespace std;
-
-int main(int argc, char* argv[]) {
-    if(argc < 2) {
-        cerr << "Usage: " << argv[0] << " <mode>\n";
-        cerr << "Mode: 0 for sequential, 1 for parallel\n";
+int main(int argc, char* argv[])
+{
+    if (argc < 2) {
+        std::cerr << "Usage: ./main <mode>\n";
+        std::cerr << "0 = sequential, 1 = parallel\n";
         return 1;
     }
 
-    vector<vector<float>> grid(N, vector<float>(N, 0.0f));
+    int mode = std::stoi(argv[1]);
 
-    int mode = stoi(argv[1]);
+    std::vector<std::vector<double>> grid(
+        GRID_SIZE, std::vector<double>(GRID_SIZE, 0.0));
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     if (mode == 0) {
-        cout << "Running sequential mode...\n";
         run_sequential(grid);
-    }
-    else if (mode == 1) {
-        cout << "Running parallel mode...\n";
-        run_work_pool(grid);
-    }
-    else {
-        cerr << "Invalid mode.\n";
-        return 1;
-    }
-
-    // ===============================
-    // GHI RA CSV — 2 CHỮ SỐ THẬP PHÂN
-    // ===============================
-    ofstream outfile("output/overpressure_matrix.csv");
-    if (!outfile) {
-        cerr << "Cannot open output file!\n";
-        return 1;
-    }
-
-    cout << "Writing CSV... (may take some seconds)\n";
-
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            outfile << fixed << setprecision(2) << grid[i][j];
-            if (j < N - 1) outfile << ",";
+    } else if (mode == 1) {
+        int num_threads = 0;
+        if (argc >= 3) {
+            num_threads = std::stoi(argv[2]);
         }
-        outfile << "\n";
+        run_parallel(grid, num_threads);
+    } else {
+        std::cerr << "Invalid mode.\n";
+        return 1;
     }
 
-    outfile.close();
-    cout << "Saved to output/overpressure_matrix.csv\n";
+    auto end = std::chrono::high_resolution_clock::now();
+    double sec = std::chrono::duration<double>(end - start).count();
+
+    std::cout << "[INFO] Elapsed Time: " << std::fixed << std::setprecision(6) << sec << " seconds\n";
+
+    save_to_csv("output/overpressure_matrix.csv", grid);
+
+    std::ofstream log("output/time_log.csv", std::ios::app);
+    if (log.is_open())
+        log << (mode == 0 ? "Sequential" : "Parallel") << "," << sec << "\n";
 
     return 0;
 }
