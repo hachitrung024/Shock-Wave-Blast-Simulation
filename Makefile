@@ -1,34 +1,30 @@
-CXX      = g++
-# Base flags common to both modes
-CXXFLAGS = -Iinclude -Wall -std=c++17
-SRC_DIR  = src
-OBJ_DIR  = obj
-TARGET   = main.exe
+CXX = g++
+CXXFLAGS = -std=c++17 -O3 -Wall -Iinclude
 
-# Check if DEBUG variable is set (e.g., make DEBUG=1)
-ifdef DEBUG
-    # Debug mode: Add debug symbols (-g) and disable optimization (-O0)
-    CXXFLAGS += -g -O0
-else
-    # Release mode: Enable high optimization (-O3) for best performance
-    CXXFLAGS += -O3
-endif
+SRC_DIR = src
+OBJ_DIR = obj
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+
+TARGET = main.exe
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
-	mkdir -p $@
+	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET)
+	rm -rf $(OBJ_DIR) *.exe
 
-.PHONY: all clean
+run_seq:
+	./main.exe 0
+
+run_par:
+	./main.exe 1
