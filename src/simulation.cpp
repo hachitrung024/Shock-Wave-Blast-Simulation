@@ -6,7 +6,7 @@ double compute_overpressure(double R)
 {
     double W = YIELD_KG;
 
-    if (R == 0) return 1e9; // avoid log(0)
+    if (R == 0) return 1e5; // avoid log(0)
 
     double Z = R * std::pow(W, -1.0/3.0);
     double U = -0.21436 + 1.35034 * std::log10(Z);

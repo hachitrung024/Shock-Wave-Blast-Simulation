@@ -14,7 +14,7 @@ plt.imshow(
     cmap="inferno",
     origin="lower",
     interpolation="nearest",
-    norm=LogNorm()  # ÁP DỤNG THANG LOGARIT
+    norm=LogNorm()
 )
 
 plt.colorbar(label="Overpressure (kPa, Log Scale)")
